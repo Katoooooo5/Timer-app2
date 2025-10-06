@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ボタン押下時間＆回数計測（3分）</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #log { margin-top: 20px; white-space: pre-line; }
+    #startBtn { font-size: 1.2em; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h2>スペースキーを押して時間と回数を計測（3分）</h2>
+  <button id="startBtn">計測開始</button>
+  <p id="status">待機中...</p>
+  <div id="log"></div>
+
+  <script>
+    let startTime = 0;
+    let keyDownTime = 0;
+    let keyCount = 0;
+    let holdingTimes = [];
+    let isRunning = false;
+    let timer;
+
+    const startBtn = document.getElementById("startBtn");
+    const status = document.getElementById("status");
+    const log = document.getElementById("log");
+
+    startBtn.onclick = function() {
+      if (isRunning) return;
+      isRunning = true;
+      keyCount = 0;
+      holdingTimes = [];
+      startTime = Date.now();
+      status.textContent = "計測中... スペースキーを押してください（3分間）";
+      log.textContent = "";
+
+      timer = setTimeout(() => {
+        isRunning = false;
+        status.textContent = "3分経過しました！計測終了";
+        showResults();
+      }, 3 * 60 * 1000);
+    };
+
+    document.addEventListener("keydown", function(e) {
+      if (!isRunning) return;
+      if (e.code === "Space" && keyDownTime === 0) {
+        keyDownTime = performance.now();
+      }
+    });
+
+    document.addEventListener("keyup", function(e) {
+      if (!isRunning) return;
+      if (e.code === "Space" && keyDownTime !== 0) {
+        const upTime = performance.now();
+        const held = Math.round(upTime - keyDownTime);
+        keyDownTime = 0;
+        keyCount++;
+        holdingTimes.push(held);
+        log.textContent += `${keyCount}回目: ${held} ms\n`;
+      }
+    });
+
+    function showResults() {
+      let total = holdingTimes.reduce((a, b) => a + b, 0);
+      log.textContent += `\n=== 結果 ===\n合計回数: ${keyCount} 回\n合計ホールド時間: ${total} ms\n平均ホールド時間: ${Math.round(total / keyCount || 0)} ms`;
+    }
+  </script>
+</body>
+</html>
+    
+
